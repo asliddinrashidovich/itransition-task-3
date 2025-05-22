@@ -1,0 +1,17 @@
+{
+  "name": "task-3",
+  "version": "1.0.0",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "description": "",
+  "dependencies": {
+    "js-sha3": "^0.9.3",
+    "readline-sync": "^1.4.10"
+  }
+}
