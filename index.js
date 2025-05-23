@@ -66,40 +66,59 @@ async function findFirstMover() {
   }
 }
 
-// function 
-
+// delete selected element of array
 function restEl(arr, index) {
   const left = arr.slice(0, index)
   const right = arr.slice(index + 1, arr.length)
   return left.concat(right)
 }
 
-// ====================== COMPUTER MOVE =====================
-async function computerMove() {
+// string array to number array 
+function stringToNumberFunc(strArr) {
+  return strArr.split(',').map(i => Number(i))
+}
+
+// ====================== CHOOSE THE DICE =====================
+async function chooseTheDice() {
   const randomNumber = getRandomNumber(dices.length)
   const key = generateHmac(generateRandomInt(), randomNumber.toString())
   const avaEl = restEl(dices, randomNumber)
+  const restDices = {}
 
   console.log(`(KEY=${key})`)
   console.log(`I make the first move and chhoose the [${dices[randomNumber]}] dice.`)
   console.log("Choose your dice:")
   for(let i = 0; i < avaEl.length; i++) {
     console.log(`${i} - ${avaEl[i]}`)
+    restDices[`${i}`] = avaEl[i]
   }
   console.log(`X - exit`)
   console.log(`? - help`)
 
-  const inputSlection = await promptUser("Your selection: ")
-  console.log(inputSlection)
+  const inputSelection = await promptUser("Your selection: ")
+
+  if(inputSelection == '?') {
+    console.log(`Computer selected ${dices[randomNumber]} and you should choose one of the other dices group (mod 6)`)
+  } else if(inputSelection == 'x') {
+    console.log("Exit")
+    process.exit(0)
+  } else if(Object.keys(restDices).includes(inputSelection)) { 
+    console.log(`You choose the [${avaEl[inputSelection]}] dice.`)
+    return {user: stringToNumberFunc(avaEl[inputSelection]), computer: stringToNumberFunc(dices[randomNumber])}
+  } else {
+    console.log('please choose other button')
+  }
 }
 
 
 async function play() {
   const result = await findFirstMover()
+  const choosedDices = await chooseTheDice()
   if(result == 'computer') {
-    computerMove()
+    chooseTheDice()
+    console.log(choosedDices)
   } else {
-    console.log('computer')
+    console.log('user')
   }
   
 }
