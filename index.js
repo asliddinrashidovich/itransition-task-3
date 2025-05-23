@@ -171,15 +171,15 @@ async function play() {
   const choosedDices = await chooseTheDice(result)
   if(result == 'my') {
     const computerMove = await rollPlay('my')
-    const resultComputer = resultGenerator(computerMove.computerRole, computerMove.myRole, choosedDices.computer, 'My', choosedDices.key)
+    const resultComputer = resultGenerator(computerMove.computerRole, computerMove.myRole, choosedDices.computer, 'My', computerMove.key)
     const myMove = await rollPlay('your')
-    const resultUser = resultGenerator(myMove.computerRole, myMove.myRole, choosedDices.user, 'Your', choosedDices.key)
+    const resultUser = resultGenerator(myMove.computerRole, myMove.myRole, choosedDices.user, 'Your', myMove.key)
     finalResult(resultComputer, resultUser)
   } else {
     const myMove = await rollPlay('your')
-    const resultUser = resultGenerator(myMove.computerRole, myMove.myRole, choosedDices.user, 'Your', choosedDices.key)
+    const resultUser = resultGenerator(myMove.computerRole, myMove.myRole, choosedDices.user, 'Your', myMove.key)
     const computerMove = await rollPlay('my')
-    const resultComputer = resultGenerator(computerMove.computerRole, computerMove.myRole, choosedDices.computer, 'My', choosedDices.key)
+    const resultComputer = resultGenerator(computerMove.computerRole, computerMove.myRole, choosedDices.computer, 'My', computerMove.key)
     finalResult(resultComputer, resultUser)
   }
 }
