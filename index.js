@@ -2,32 +2,47 @@ const crypto = require('crypto');
 const readline = require('readline');
 
 // argv array
-const dices = process.argv.slice(2) // 2,2,4,4,9,9 6,8,1,1,8,6 7,5,3,7,5,3
+const dices = process.argv.slice(2)
 
 const rl = readline.createInterface({
   input: process.stdin,
   output: process.stdout
 })
-// ====================== GENERATE RANDOM HMAC =====================
 
+// ====================== MINI FUNCTIONS =====================
 // generate random number
 function getRandomNumber(max) {
   return crypto.randomInt(0, max)
 }
-
 // generate secure random 32 bytes
 function generateRandomInt() {
   return crypto.randomBytes(32)
 }
-
 // generate hmac sha3_256
 function generateHmac(key, message) {
-  return crypto.createHmac('sha2-256', key).update(message).digest('hex')
+  return crypto.createHmac('sha3-256', key).update(message).digest('hex')
 }
-
 // user prompt
 function promptUser(question) {
   return new Promise(resolve => rl.question(question, answer => resolve(answer.trim())));
+}
+// delete selected element of array
+function restEl(arr, index) {
+  const left = arr.slice(0, index)
+  const right = arr.slice(index + 1, arr.length)
+  return left.concat(right)
+}
+// string array to number array 
+function stringToNumberFunc(strArr) {
+  return strArr.split(',').map(i => Number(i))
+}
+// console logs
+function consoleCreater(max) {
+  for(let i = 0; i < max; i++) {
+    console.log(`${i} - ${i}`)
+  }
+  console.log(`X - exit`)
+  console.log(`? - help`)
 }
 
 // ====================== WHO FIRST MOVE =====================
@@ -38,89 +53,135 @@ async function findFirstMover() {
   console.log("Let's determine who makes the first move.")
   console.log(`I selected a random value in the range 0..1 \n (HMAC=${hmac}).`)
   console.log("Try to guess my selection.")
-  console.log(`0 - 0`)
-  console.log(`1 - 1`)
-  console.log(`X - exit`)
-  console.log(`? - help`)
+  consoleCreater(2)
   
-  let inputSelection = await promptUser("Your selection: ");
-  
-  if(inputSelection == '?') {
-    console.log("Computer selected 0 or 1 and you should guess one of them to find who will move first")
-    findFirstMover()
-  } else if(inputSelection == 'x') {
-    console.log("Exit")
-    process.exit(0)
-  } else if(inputSelection == 0 || inputSelection == 1) {
-    console.log(`My selection: ${randomNumber}`)
-    
-    if(inputSelection == randomNumber) {
-      console.log('user')
-      return "user"
-    } else {
-      console.log('computer')
-      return "computer"
-    }
-  } else {
-    console.log('please choose other button')
+  let inputValue = await promptUser("Your selection: ");
+  if(inputValue.toLowerCase() == 'x') process.exit(0)
+  if(inputValue == '?') {
+    console.log("Computer selected 0 or 1 and you should guess one of them to find who will move first \n")
+    return await findFirstMover()
   }
-}
-
-// delete selected element of array
-function restEl(arr, index) {
-  const left = arr.slice(0, index)
-  const right = arr.slice(index + 1, arr.length)
-  return left.concat(right)
-}
-
-// string array to number array 
-function stringToNumberFunc(strArr) {
-  return strArr.split(',').map(i => Number(i))
+  if(inputValue == 0 || inputValue == 1) {
+    console.log(`My selection: ${randomNumber}`)
+    if(inputValue == randomNumber) {
+      return "your"
+    } else {
+      return "my"
+    }
+  }
+  if(isNaN(inputValue) || inputValue < 0 || inputValue >= 2) {
+    console.log('Invalid button, please press other button, \n')
+    return await findFirstMover()
+  }
 }
 
 // ====================== CHOOSE THE DICE =====================
-async function chooseTheDice() {
+async function chooseTheDice(user) {
   const randomNumber = getRandomNumber(dices.length)
-  const key = generateHmac(generateRandomInt(), randomNumber.toString())
-  const avaEl = restEl(dices, randomNumber)
+  const key = generateRandomInt().toString('hex')
+  const availableEl = restEl(dices, randomNumber)
   const restDices = {}
 
   console.log(`(KEY=${key})`)
-  console.log(`I make the first move and chhoose the [${dices[randomNumber]}] dice.`)
+  if(user == 'my') {
+    console.log(`I make the first move and chooose the [${dices[randomNumber]}] dice.`)
+  }
+  if(user == 'your') {
+    console.log(`You guessed correctly! You make the first move.`)
+  }
   console.log("Choose your dice:")
-  for(let i = 0; i < avaEl.length; i++) {
-    console.log(`${i} - ${avaEl[i]}`)
-    restDices[`${i}`] = avaEl[i]
+  for(let i = 0; i < availableEl.length; i++) {
+    console.log(`${i} - ${availableEl[i]}`)
+    restDices[`${i}`] = availableEl[i]
   }
   console.log(`X - exit`)
   console.log(`? - help`)
 
-  const inputSelection = await promptUser("Your selection: ")
-
-  if(inputSelection == '?') {
-    console.log(`Computer selected ${dices[randomNumber]} and you should choose one of the other dices group (mod 6)`)
-  } else if(inputSelection == 'x') {
-    console.log("Exit")
-    process.exit(0)
-  } else if(Object.keys(restDices).includes(inputSelection)) { 
-    console.log(`You choose the [${avaEl[inputSelection]}] dice.`)
-    return {user: stringToNumberFunc(avaEl[inputSelection]), computer: stringToNumberFunc(dices[randomNumber])}
-  } else {
-    console.log('please choose other button')
+  const inputValue = await promptUser("Your selection: ")
+  if(inputValue == 'x') process.exit(0)
+  if(inputValue == '?') {
+    console.log(`Computer and you have to choose dices, please press ${Object.keys(restDices)} buttons to choose the dice`)
+    return await chooseTheDice(user)
+  } 
+  if(Object.keys(restDices).includes(inputValue)) { 
+    console.log(`You choose the [${availableEl[inputValue]}] dice.`)
+    if(user == 'your') {
+      console.log(`I choose the [${dices[randomNumber]}] dice.`)
+    }
+    return {user: stringToNumberFunc(availableEl[inputValue]), computer: stringToNumberFunc(dices[randomNumber])}
+  } 
+  if(isNaN(inputValue) || inputValue < 0 || inputValue >= availableEl.length) {
+    console.log('Invalid button, please press other button,')
+    return await chooseTheDice(user)
   }
 }
 
+// ====================== MOVE PLAY =====================
+async function rollPlay(user) {
+  const variantValues = [0,1,2,3,4,5]
+  const randomNumber = getRandomNumber(6)
+  const key = generateRandomInt().toString('hex')
+  const hmac = generateHmac(key, randomNumber.toString())
+  console.log(`It's time for ${user} role.`)
+  console.log(`I selected a random value in the range 0..5 \n (HMAC=${hmac}).`)
+  console.log(`Add your number module 6.`)
+  consoleCreater(6)
 
+  const inputValue = await promptUser("Your selection: ")
+  if(inputValue == 'x') process.exit(0)
+  if(inputValue == '?') {
+    console.log(`Computer selected a random value in the range 0...5 and you should choose 0, 1, 2, 3, 4, 5`)
+    return await rollPlay(user)
+  }  
+  if (variantValues.includes(Number(inputValue))) {
+    return {computerRole: randomNumber, myRole: inputValue, key}
+  } 
+  if(isNaN(inputValue) || inputValue < 0 || inputValue >= 6) {
+    console.log('Invalid button, please press other button,')
+    return await rollPlay(user)
+  }
+}
+
+// ====================== RESULT CALCULATOR =====================
+function resultGenerator(com, my, dice, user, key) {
+  const indexDices = (Number(com) + Number(my)) % 6
+  const result = dice[indexDices]
+  console.log(`My number is ${com}`)
+  console.log(`(KEY=${key})`)
+  console.log(`The fair number generation result ${com} + ${my} = ${indexDices} (mod 6).`)
+  console.log(`${user} roll result is ${result}.`)
+  return result
+}
+
+// ====================== FINAL RESULT =====================
+async function finalResult(com, user) {
+  if(com > user) {
+    console.log(`I win (${com} > ${user})!`)
+  } else if (com < user){
+    console.log(`You win (${user} > ${com})!`)
+  } else {
+    console.log(`It's a draw (${user} = ${com}).`);
+  }
+  process.exit(0)
+}
+
+// ====================== PLAY =====================
 async function play() {
   const result = await findFirstMover()
-  const choosedDices = await chooseTheDice()
-  if(result == 'computer') {
-    chooseTheDice()
-    console.log(choosedDices)
+  const choosedDices = await chooseTheDice(result)
+  if(result == 'my') {
+    const computerMove = await rollPlay('my')
+    const resultComputer = resultGenerator(computerMove.computerRole, computerMove.myRole, choosedDices.computer, 'My', choosedDices.key)
+    const myMove = await rollPlay('your')
+    const resultUser = resultGenerator(myMove.computerRole, myMove.myRole, choosedDices.user, 'Your', choosedDices.key)
+    finalResult(resultComputer, resultUser)
   } else {
-    console.log('user')
+    const myMove = await rollPlay('your')
+    const resultUser = resultGenerator(myMove.computerRole, myMove.myRole, choosedDices.user, 'Your', choosedDices.key)
+    const computerMove = await rollPlay('my')
+    const resultComputer = resultGenerator(computerMove.computerRole, computerMove.myRole, choosedDices.computer, 'My', choosedDices.key)
+    finalResult(resultComputer, resultUser)
   }
-  
 }
 play()
 
@@ -128,16 +189,11 @@ play()
 
 
 
+// else Invalid or taken dice. Try again.
+// user You guessed correctly! You make the first move.
+// ? This is a fair random number generation using HMAC. You select a number, we add both numbers modulo range.
 
-
-
-
-
-
-
-
-
-// // index.js
+// index.js
 
 // const crypto = require('crypto');
 // const readline = require('readline');
