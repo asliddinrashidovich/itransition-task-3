@@ -144,7 +144,7 @@ async function chooseTheDice(user, key) {
       console.log("You can compute: HMAC_SHA3_256(key, computer_number)")
       console.log("Compare it with the HMAC shown before to verify the number wasn't changed.\n")
       showHelpTable()
-      return await chooseTheDice(user)
+      return await chooseTheDice(user, key)
     } 
     if(Object.keys(restDices).includes(inputValue)) { 
       console.log(`You choose the [${availableEl[inputValue]}] dice.`)
@@ -152,7 +152,7 @@ async function chooseTheDice(user, key) {
     } 
     if(isNaN(inputValue) || inputValue < 0 || inputValue >= availableEl.length) {
       console.log('Invalid button, please press other button,')
-      return await chooseTheDice(user)
+      return await chooseTheDice(user, key)
     }
   } else {
     const randomNumber = getRandomNumber(dices.length - 1)
@@ -177,17 +177,17 @@ async function chooseTheDice(user, key) {
       console.log("You can compute: HMAC_SHA3_256(key, computer_number)")
       console.log("Compare it with the HMAC shown before to verify the number wasn't changed.\n")
       showHelpTable()
-      return await chooseTheDice(user)
+      return await chooseTheDice(user, key)
     } 
     if(Object.keys(restDices).includes(inputValue)) { 
-      deleteEl = inputValue
+      deleteEl = Number(inputValue)
       console.log(`You choose the [${dices[inputValue]}] dice.`)
-      console.log(`I choose the [${availableEl[randomNumber]}] dice.`)
-      return {user: stringToNumberFunc(dices[inputValue]), computer: stringToNumberFunc(availableEl[randomNumber])}
+      console.log(`I choose the [${availableEl[deleteEl]}] dice.`)
+      return {user: stringToNumberFunc(dices[inputValue]), computer: stringToNumberFunc(availableEl[deleteEl])}
     } 
     if(isNaN(inputValue) || inputValue < 0 || inputValue >= dices.length) {
       console.log('Invalid button, please press other button,')
-      return await chooseTheDice(user)
+      return await chooseTheDice(user, key)
     }
   }
 }
@@ -196,7 +196,7 @@ async function chooseTheDice(user, key) {
 async function rollPlay(user) {
   const variantValues = [0,1,2,3,4,5]
   const randomNumber = getRandomNumber(6)
-  const key = generateRandomInt().toString('hex')
+  const key = generateRandomInt()
   const hmac = generateHmac(key, randomNumber.toString())
   console.log(`It's time for ${user} role.`)
   console.log(`I selected a random value in the range 0..5 \n (HMAC=${hmac}).`)
@@ -223,8 +223,8 @@ function resultGenerator(com, my, dice, user, key) {
   const indexDices = (Number(com) + Number(my)) % 6
   const result = dice[indexDices]
   console.log(`My number is ${com}`)
-  console.log(`(KEY=${key})`)
-  console.log(`The fair number generation result ${com} + ${my} = ${indexDices} (mod 6).`)
+  console.log(`(KEY=${key.toString('hex')})`)
+  console.log(`The fair number generation result ${com} + ${my} = ${indexDices} [${dice}].`)
   console.log(`${user} roll result is ${result}.`)
   return result
 }
@@ -283,3 +283,5 @@ if (!validateDices(dices)) {
   process.exit(1);
 }
 play()
+
+
